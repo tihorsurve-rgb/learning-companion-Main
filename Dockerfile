@@ -1,6 +1,11 @@
 # Stage 1: Build
 FROM node:20-alpine as build
 
+# Accept the Gemini API key as a build argument
+# Vite embeds VITE_* env vars at build time, so we need it here
+ARG VITE_GEMINI_API_KEY
+ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
+
 WORKDIR /app
 
 COPY package*.json ./
