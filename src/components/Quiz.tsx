@@ -1,160 +1,128 @@
-import { useState, useEffect } from 'react';
-import { generateQuizQuestions } from '../services/geminiService';
-import type { LearningContext } from '../services/geminiService';
-import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { type Lesson, type QuizQuestion, type QuizResult } from '../types';
+import { generateQuiz } from '../services/geminiService';
+import { Button, Card, ProgressBar, Badge } from './UI';
+import { calculateQuizScore } from '../utils/quizUtils';
 
 interface QuizProps {
-  context: LearningContext;
-  onComplete: (score: number, total: number) => void;
+  lesson: Lesson;
+  onComplete: (result: QuizResult) => void;
 }
 
-interface Question {
-  question: string;
-  options: string[];
-  answerIndex: number;
-}
-
-export const Quiz: React.FC<QuizProps> = ({ context, onComplete }) => {
-  const [questions, setQuestions] = useState<Question[]>([]);
+export const Quiz: React.FC<QuizProps> = ({ lesson, onComplete }) => {
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-  const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
-    let mounted = true;
-    const fetchQuestions = async () => {
-      try {
-        setLoading(true);
-        const data = await generateQuizQuestions(context);
-        if (mounted) {
-          setQuestions(data);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError('Failed to load quiz. Please try again later.');
-          setLoading(false);
-        }
-      }
+    handleLoadQuiz();
+  }, [lesson]);
+
+  const handleLoadQuiz = async () => {
+    setLoading(true);
+    try {
+      const q = await generateQuiz(lesson);
+      setQuestions(q);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnswer = (optionIndex: number) => {
+    const newAnswers = [...answers];
+    newAnswers[currentIndex] = optionIndex;
+    setAnswers(newAnswers);
+
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      handleFinish();
+    }
+  };
+
+  const handleFinish = () => {
+    const correctCount = answers.reduce((acc, ans, idx) => acc + (ans === questions[idx].correctAnswer ? 1 : 0), 0);
+    const percentage = calculateQuizScore(correctCount, questions.length);
+    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+    
+    const wrongAnswers = questions.map((q, idx) => ({
+      question: q.question,
+      userAnswer: answers[idx],
+      correctAnswer: q.correctAnswer,
+      concept: lesson.title // Simplification: use lesson title as concept for now
+    })).filter((_, idx) => answers[idx] !== questions[idx].correctAnswer);
+
+    const result: QuizResult = {
+      score: correctCount,
+      totalQuestions: questions.length,
+      percentage,
+      timeTaken,
+      confidenceRating: 4, // Could be asked to user
+      wrongAnswers,
+      timestamp: Date.now()
     };
 
-    fetchQuestions();
-    return () => { mounted = false; };
-  }, [context]);
-
-  const handleSelect = (index: number) => {
-    if (isChecking) return;
-    setSelectedAnswer(index);
+    onComplete(result);
+    setShowResults(true);
   };
 
-  const handleCheck = () => {
-    if (selectedAnswer === null) return;
-    
-    setIsChecking(true);
-    if (selectedAnswer === questions[currentIndex].answerIndex) {
-      setScore(prev => prev + 1);
-    }
-  };
+  if (loading) return (
+    <Card className="flex flex-col items-center justify-center min-h-[300px]">
+      <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+      <p className="text-white/60">Preparing your quiz...</p>
+    </Card>
+  );
 
-  const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setSelectedAnswer(null);
-      setIsChecking(false);
-    } else {
-      onComplete(score + (selectedAnswer === questions[currentIndex].answerIndex ? 1 : 0), questions.length);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem' }}>
-        <div style={{ animation: 'spin 1s linear infinite', display: 'inline-block', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', width: '40px', height: '40px' }} />
-        <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Generating personalized questions...</p>
-      </div>
-    );
-  }
-
-  if (error || questions.length === 0) {
-    return (
-      <div className="glass-panel" style={{ textAlign: 'center' }}>
-        <p style={{ color: 'var(--danger)' }}>{error || 'No questions available.'}</p>
-        <button className="btn btn-primary" onClick={() => onComplete(0, 0)} style={{ marginTop: '1rem' }}>
-          Skip Quiz
-        </button>
-      </div>
-    );
-  }
-
-  const currentQ = questions[currentIndex];
-  const isCorrect = selectedAnswer === currentQ.answerIndex;
+  const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="glass-panel animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Quiz Time</h2>
-        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Question {currentIndex + 1} of {questions.length}
-        </span>
-      </div>
-
-      <div className="progress-container" style={{ marginBottom: '2rem' }}>
-        <div className="progress-bar" style={{ width: `${((currentIndex) / questions.length) * 100}%` }} />
-      </div>
-
-      <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 500 }}>{currentQ.question}</h3>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-        {currentQ.options.map((option, index) => {
-          let styleClass = 'btn-secondary';
-          if (isChecking) {
-            if (index === currentQ.answerIndex) styleClass = 'btn-primary'; // Highlight correct answer
-            else if (index === selectedAnswer) styleClass = 'btn-disabled'; // Mark selected wrong
-          } else if (selectedAnswer === index) {
-            styleClass = 'btn-outline'; // Currently selected before check
-          }
-
-          return (
-            <button
-              key={index}
-              className={`btn ${styleClass}`}
-              style={{ justifyContent: 'flex-start', padding: '1rem', textAlign: 'left', height: 'auto', opacity: isChecking && index !== currentQ.answerIndex && index !== selectedAnswer ? 0.5 : 1 }}
-              onClick={() => handleSelect(index)}
-              disabled={isChecking}
-            >
-              {option}
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '3rem' }}>
-        <div>
-          {isChecking && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isCorrect ? 'var(--success)' : 'var(--danger)', fontWeight: 500 }}>
-              {isCorrect ? <CheckCircle size={20} /> : <XCircle size={20} />}
-              {isCorrect ? 'Correct!' : 'Not quite right.'}
-            </span>
-          )}
+    <Card className="animate-in fade-in zoom-in-95 duration-300">
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-white">Quiz: {lesson.title}</h3>
+          <Badge color="purple">Question {currentIndex + 1} of {questions.length}</Badge>
         </div>
+        <ProgressBar progress={((currentIndex) / questions.length) * 100} />
+      </div>
 
-        {!isChecking ? (
-          <button 
-            className={`btn btn-primary ${selectedAnswer === null ? 'btn-disabled' : ''}`}
-            onClick={handleCheck}
-            disabled={selectedAnswer === null}
-          >
-            Check Answer
-          </button>
-        ) : (
-          <button className="btn btn-primary" onClick={handleNext}>
-            {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Quiz'} <ArrowRight size={18} />
+      <div className="space-y-6">
+        <p className="text-lg text-white font-medium">{currentQuestion.question}</p>
+        
+        <div className="grid grid-cols-1 gap-3">
+          {currentQuestion.options.map((option, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleAnswer(idx)}
+              className={`w-full text-left p-4 rounded-xl border transition-all ${
+                answers[currentIndex] === idx 
+                  ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/20' 
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/80'
+              }`}
+            >
+              <div className="flex items-center">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mr-3 text-sm font-bold">
+                  {String.fromCharCode(65 + idx)}
+                </span>
+                {option}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8 flex justify-between items-center text-sm text-white/40">
+        <span>Click an option to select and move to next question</span>
+        {currentIndex > 0 && (
+          <button onClick={() => setCurrentIndex(currentIndex - 1)} className="hover:text-white transition-colors">
+            ← Previous Question
           </button>
         )}
       </div>
-    </div>
+    </Card>
   );
 };

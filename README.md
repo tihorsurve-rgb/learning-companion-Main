@@ -1,62 +1,82 @@
-# Learning Companion
+# Learning Companion AI 🎓
 
-An intelligent, adaptive learning assistant built with React, Vite, Firebase, and Google Gemini API. This application personalizes educational content, tracks user progress, and adjusts learning difficulty based on quiz performance.
+An intelligent AI learning companion that personalizes learning content, adapts to user pace, detects weak areas, and builds a structured learning path.
 
-## 🚀 Demo Flow
-1. Open the application.
-2. Enter a topic (e.g., "Photosynthesis").
-3. Select "Beginner" level and "Slow" pace.
-4. Click "Start Learning".
-5. Read the generated simple explanation.
-6. Click "Take Quiz" and answer the questions.
-7. Observe how the feedback and difficulty adapt based on your score:
-   - Low score: "Let's slow down and explain with simpler examples."
-   - High score: "Great! Moving to a slightly advanced concept."
+Built for the **Google Hack2Skill / Prompt War Challenge**.
 
-## 🛠️ Architecture & Tech Stack
-- **Frontend**: React 18, TypeScript, Vite
-- **Styling**: Vanilla CSS (Custom properties, CSS modules-like scoping, glassmorphism)
-- **Icons**: Lucide React
-- **AI Services**: Google Generative AI (Gemini 1.5 Flash)
-- **Database & Auth**: Firebase Firestore (Ready for Auth integration)
-- **Testing**: Vitest, React Testing Library
+## 🚀 Features
 
-## 🔒 Security Notes
-- **API Keys**: API keys are securely managed via environment variables and are **not** hardcoded in the application source.
-- **Firestore Rules**: Configured to ensure users can only read/write their own progress data.
-- **Input Validation**: Handled natively and via React state before API submission to Gemini.
+- **Personalized Onboarding**: Tailor your learning experience based on your topic, level, goal, and preferred style.
+- **AI-Powered Roadmaps**: Automatically generate a 5-step roadmap for any topic using Google Gemini.
+- **Adaptive Dashboard**: Lessons that adapt to your performance. Request easier explanations or real-life examples on the fly.
+- **Smart Quizzes**: Dynamic quizzes that adjust difficulty based on your score.
+- **Weak Area Detection**: Automatically identifies concepts you struggle with and suggests targeted revision.
+- **AI Study Tools**: Instant study notes, memory tricks, and interactive flashcards.
+- **Voice Support**: "Read Aloud" functionality for accessible learning.
+- **Progress Analytics**: Track your completion, scores, and learning streaks.
+- **Demo Mode**: Fully functional even without API keys using built-in mock data.
 
-## ⚙️ Setup Instructions
+## 🛠️ Google Services Used
 
-1. **Clone & Install Dependencies**
-   ```bash
-   npm install
-   ```
+- **Google Gemini API**: Powers all AI features including roadmap generation, lesson content, quizzes, and study aids.
+- **Firebase Auth**: Secure, anonymous guest login.
+- **Firestore**: Scalable storage for user profiles and learning progress.
+- **Web Speech API**: Integrated voice learning support.
 
-2. **Environment Variables**
-   Rename `.env.example` to `.env.local` and add your keys:
-   ```env
-   VITE_GEMINI_API_KEY=your_real_gemini_api_key
-   VITE_FIREBASE_API_KEY=your_firebase_key
-   # ...other firebase config
-   ```
-   *Note: If no Gemini API key is provided, the app will automatically run in "Mock Mode" for demo purposes.*
+## 🏗️ Architecture
 
-3. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
+The app follows a clean, modular architecture:
+- `src/components`: Reusable UI and functional modules.
+- `src/services`: Gemini and Firebase integrations.
+- `src/hooks`: Custom hooks for Auth and state management.
+- `src/utils`: Adaptive logic and security utilities.
+- `src/types`: Comprehensive TypeScript definitions.
+
+## 🔒 Security & Efficiency
+
+- **Environment Variables**: Sensitive keys are never hardcoded.
+- **Firestore Rules**: Restricted data access per user.
+- **Input Sanitization**: All user inputs are sanitized before being sent to the AI.
+- **Caching**: AI-generated content is stored in state/Firestore to minimize API calls.
+- **Responsive & Accessible**: Semantic HTML, ARIA labels, and mobile-first design.
 
 ## 🧪 Testing
 
-The project uses Vitest for testing core logic (like the adaptive difficulty scoring).
+Comprehensive unit tests for core logic using Vitest:
+- Adaptive difficulty adjustment logic.
+- Quiz score calculation.
+- Weak area detection.
+- Security sanitization.
 
 Run tests with:
 ```bash
-npm run test
+npm test
 ```
 
-## 📊 Google Services Used
-- **Google Gemini API**: For generating dynamic learning content, personalized explanations, and contextual quizzes.
-- **Firebase Firestore**: For storing user progress, completed lessons, and difficulty metrics.
-- **Firebase Auth** (Optional Extension): Scaffolded for seamless login and user identification.
+## 📦 Getting Started
+
+1. Clone the repository.
+2. Install dependencies: `npm install`
+3. Copy `.env.example` to `.env` and add your keys.
+4. Run locally: `npm run dev`
+
+## 🎬 Demo
+
+Check out the live demo and walkthrough:
+- **Live Demo**: [Link to your hosted app (e.g. Firebase Hosting/Vercel)](#)
+- **Video Walkthrough**: [Link to your YouTube/Loom Demo Video](#)
+
+## 🎬 Demo Scenario
+
+1. Click **Start Learning Now**.
+2. Enter Topic: "Photosynthesis".
+3. Level: "Beginner", Pace: "Slow", Style: "Example-based", Time: "20 min".
+4. Explore the generated **Roadmap**.
+5. Read the **Lesson**, use **Read Aloud**.
+6. Take the **Quiz**.
+7. View **Weak Areas** and **Study Notes**.
+8. Flip through **Flashcards**.
+
+---
+
+Built with ❤️ by Antigravity (Google Deepmind)
