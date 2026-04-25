@@ -8,11 +8,11 @@ import { Flashcards } from './Flashcards';
 import { StudyNotes } from './StudyNotes';
 
 export const LearningDashboard: React.FC = () => {
-  const { userProfile, updateProfile } = useAuth();
+  const { userProfile } = useAuth();
   const [roadmap, setRoadmap] = useState<RoadmapStep[]>([]);
   const [currentStep, setCurrentStep] = useState<RoadmapStep | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'lesson' | 'quiz' | 'flashcards' | 'notes'>('lesson');
   const [dailyPlan, setDailyPlan] = useState<string>('');
   const [progress, setProgress] = useState<ProgressData>({
@@ -62,7 +62,6 @@ export const LearningDashboard: React.FC = () => {
   };
 
   const handleQuizComplete = async (result: QuizResult) => {
-    // Update progress
     const newProgress = {
       ...progress,
       completedLessons: progress.completedLessons + 1,
@@ -71,12 +70,9 @@ export const LearningDashboard: React.FC = () => {
     };
     setProgress(newProgress);
     
-    // Mark step as completed
     if (currentStep) {
       const newRoadmap = roadmap.map(s => s.step === currentStep.step ? { ...s, completed: true } : s);
       setRoadmap(newRoadmap);
-      
-      // Move to next step logic could go here or wait for user click
     }
     setView('lesson');
   };
@@ -98,7 +94,6 @@ export const LearningDashboard: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Sidebar - Roadmap & Progress */}
       <div className="space-y-6">
         <Card>
           <h3 className="text-xl font-bold mb-4 text-white">Your Learning Path</h3>
@@ -165,7 +160,6 @@ export const LearningDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Main Content Area */}
       <div className="lg:col-span-2 space-y-6">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <Button 

@@ -44,7 +44,9 @@ export const ProgressBar: React.FC<{ progress: number; label?: string; sublabel?
   </div>
 );
 
-export const Badge: React.FC<{ children: React.ReactNode; color?: 'blue' | 'purple' | 'green' | 'orange' }> = ({ children, color = 'blue' }) => {
+export const Badge: React.FC<{ children: React.ReactNode; color?: 'blue' | 'purple' | 'green' | 'orange'; className?: string }> = ({ 
+  children, color = 'blue', className = '' 
+}) => {
   const colors = {
     blue: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
     purple: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
@@ -52,7 +54,7 @@ export const Badge: React.FC<{ children: React.ReactNode; color?: 'blue' | 'purp
     orange: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   };
   return (
-    <span className={`px-2 py-1 rounded-md text-xs font-bold border ${colors[color]}`}>
+    <span className={`px-2 py-1 rounded-md text-xs font-bold border inline-block ${colors[color]} ${className}`}>
       {children}
     </span>
   );

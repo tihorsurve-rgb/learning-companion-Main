@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { type Lesson, type QuizQuestion, type QuizResult } from '../types';
 import { generateQuiz } from '../services/geminiService';
-import { Button, Card, ProgressBar, Badge } from './UI';
+import { Card, ProgressBar, Badge } from './UI';
 import { calculateQuizScore } from '../utils/quizUtils';
 
 interface QuizProps {
@@ -14,7 +14,6 @@ export const Quiz: React.FC<QuizProps> = ({ lesson, onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showResults, setShowResults] = useState(false);
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
@@ -68,7 +67,6 @@ export const Quiz: React.FC<QuizProps> = ({ lesson, onComplete }) => {
     };
 
     onComplete(result);
-    setShowResults(true);
   };
 
   if (loading) return (
